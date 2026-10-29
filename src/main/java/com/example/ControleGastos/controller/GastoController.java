@@ -1,44 +1,39 @@
 package com.example.ControleGastos.controller;
 
 import com.example.ControleGastos.model.Gasto;
+import com.example.ControleGastos.repository.GastoRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/gastos")
 public class GastoController {
 
-    private final List<Gasto> gastos = new ArrayList<>();
-    private long proximoId = 1;
+    private final GastoRepository repository;
+
+    public GastoController(GastoRepository repository) {
+        this.repository = repository;
+    }
 
     @GetMapping
     public List<Gasto> listar() {
-        return gastos;
+        return repository.findAll();
     }
 
     @PostMapping
     public Gasto criar(@RequestBody Gasto gasto) {
-        gasto.setId(proximoId++);
-        gastos.add(gasto);
-        return gasto;
+        return repository.save(gasto);
     }
+
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable long id) {
-        for (Gasto gasto : gastos) {
-            if (gasto.getId() == id) {
-                gastos.remove(gasto);
-            }
-        }
+    public void deletar(@PathVariable Long id) {
+        repository.deleteById(id);
     }
     @GetMapping("/{id}")
-    public Gasto obterGasto(@PathVariable long id) {
-        for (Gasto gasto : gastos) {
-            if (gasto.getId() == id) {
-                return gasto;
-            }
-        }
-        return null;
+    public Gasto buscarPorId(@PathVariable Long id) {
+        return repository.findById(id).orElse(null);
     }
 }
