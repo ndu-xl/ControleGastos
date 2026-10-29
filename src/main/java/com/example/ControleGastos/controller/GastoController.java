@@ -1,6 +1,7 @@
 package com.example.ControleGastos.controller;
 
 import com.example.ControleGastos.model.Gasto;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,5 +11,17 @@ import java.util.List;
 public class GastoController {
 
     private final List<Gasto> gastos = new ArrayList<>();
-    private Long proximoId = 1;
+    private long proximoId = 1;
+
+    @GetMapping
+    public List<Gasto> listar() {
+        return gastos;
+    }
+
+    @PostMapping
+    public Gasto criar(@RequestBody Gasto gasto) {
+        gasto.setId(proximoId++);
+        gastos.add(gasto);
+        return gasto;
+    }
 }
