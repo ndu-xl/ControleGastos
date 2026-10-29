@@ -24,4 +24,21 @@ public class GastoController {
         gastos.add(gasto);
         return gasto;
     }
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable long id) {
+        for (Gasto gasto : gastos) {
+            if (gasto.getId() == id) {
+                gastos.remove(gasto);
+            }
+        }
+    }
+    @GetMapping("/{id}")
+    public Gasto obterGasto(@PathVariable long id) {
+        for (Gasto gasto : gastos) {
+            if (gasto.getId() == id) {
+                return gasto;
+            }
+        }
+        return null;
+    }
 }
