@@ -1,39 +1,46 @@
 package com.example.ControleGastos.controller;
 
 import com.example.ControleGastos.model.Gasto;
-import com.example.ControleGastos.repository.GastoRepository;
+import com.example.ControleGastos.service.GastoService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/gastos")
 public class GastoController {
 
-    private final GastoRepository repository;
+    private final GastoService service;
 
-    public GastoController(GastoRepository repository) {
-        this.repository = repository;
+    public GastoController(GastoService service) {
+        this.service = service;
     }
 
     @GetMapping
     public List<Gasto> listar() {
-        return repository.findAll();
+        return service.listar();
     }
 
     @PostMapping
-    public Gasto criar(@RequestBody Gasto gasto) {
-        return repository.save(gasto);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Gasto criar(@Valid @RequestBody Gasto gasto) {
+        return service.criar(gasto);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletar(@PathVariable Long id) {
-        repository.deleteById(id);
+        service.deletar(id);
     }
     @GetMapping("/{id}")
     public Gasto buscarPorId(@PathVariable Long id) {
-        return repository.findById(id).orElse(null);
+        return service.buscarPorId(id);
     }
+    @PutMapping("/{id}")
+    public Gasto atualizar(@PathVariable Long id, @Valid @RequestBody Gasto gasto) {
+        return service.atualizar(id, gasto);
+    }
+
 }
