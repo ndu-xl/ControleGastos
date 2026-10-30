@@ -10,7 +10,8 @@ import java.util.List;
 
 @Service
 public class GastoService {
-    private GastoRepository repository;
+    private final GastoRepository repository;
+
     public GastoService(GastoRepository repository) {
         this.repository = repository;
     }
@@ -20,6 +21,7 @@ public class GastoService {
     }
 
     public Gasto criar(Gasto gasto) {
+        gasto.setId(null);
         if (gasto.getData() == null) {
             gasto.setData(LocalDate.now());
         }
@@ -30,15 +32,19 @@ public class GastoService {
         return repository.findById(id)
                 .orElseThrow(() -> new GastoNaoEncontradoException(id));
     }
+
     public void deletar(Long id){
         Gasto gasto = buscarPorId(id);
         repository.delete(gasto);
     }
+
     public Gasto atualizar(Long id, Gasto gasto) {
         Gasto gastoAtualizado = buscarPorId(id);
         gastoAtualizado.setCategoria(gasto.getCategoria());
         gastoAtualizado.setDescricao(gasto.getDescricao());
-        gastoAtualizado.setData(LocalDate.now());
+        gastoAtualizado.setData(
+                gasto.getData() == null ? LocalDate.now() : gasto.getData()
+        );
         gastoAtualizado.setValor(gasto.getValor());
         return repository.save(gastoAtualizado);
     }
