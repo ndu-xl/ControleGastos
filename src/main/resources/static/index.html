@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de gastos</title>
+<style>
+  :root {
+    --papel: #edf1ec; --tinta: #1f2a24; --suave: #5d6b62; --linha: #c9d3cb;
+    --campo: #f8faf7; --destaque: #1e6b4a; --destaque-texto: #ffffff; --perigo: #b3382c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --papel: #16201b; --tinta: #e6ede8; --suave: #9aaba0; --linha: #31423a;
+      --campo: #1d2923; --destaque: #5fbf93; --destaque-texto: #0e1a14; --perigo: #ee8b7f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--papel); color: var(--tinta);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+  header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: 1rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 2px solid var(--tinta);
+  }
+  h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+  .total { text-align: right; }
+  .total small { display: block; color: var(--suave); }
+  .total strong {
+    font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1.1;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  }
+
+  form {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: .75rem; padding: 1.25rem 0; border-bottom: 1px solid var(--linha);
+  }
+  label { display: grid; gap: .25rem; font-size: .875rem; color: var(--suave); }
+  input {
+    font: inherit; color: var(--tinta); background: var(--campo);
+    border: 1px solid var(--linha); border-radius: 4px; padding: .5rem .6rem; min-width: 0;
+  }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+  .botoes { display: flex; gap: .5rem; align-items: end; }
+  button {
+    font: inherit; cursor: pointer; border-radius: 4px; padding: .5rem .9rem;
+    border: 1px solid var(--tinta); background: transparent; color: var(--tinta);
+  }
+  button.principal { background: var(--destaque); border-color: var(--destaque); color: var(--destaque-texto); font-weight: 600; }
+  button.perigo { color: var(--perigo); }
+  button.link { border: 0; padding: .25rem .4rem; text-decoration: underline; }
+
+  #erro { min-height: 1.5rem; margin: .75rem 0 0; color: var(--perigo); font-weight: 500; }
+
+  .tabela { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; font-weight: 500; font-size: .875rem; color: var(--suave);
+    padding: .5rem .5rem .5rem 0; border-bottom: 1px solid var(--tinta);
+  }
+  td { padding: .65rem .5rem .65rem 0; border-bottom: 1px solid var(--linha); }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.acoes { white-space: nowrap; text-align: right; padding-right: 0; }
+  .vazio { color: var(--suave); padding: 1.5rem 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Controle de gastos</h1>
+    <div class="total">
+      <small>Total gasto</small>
+      <strong id="total">R$ 0,00</strong>
+    </div>
+  </header>
+
+  <form id="form">
+    <input type="hidden" id="id">
+    <label>Descrição
+      <input id="descricao" required placeholder="Almoço">
+    </label>
+    <label>Valor (R$)
+      <input id="valor" type="number" step="0.01" min="0.01" required placeholder="32.50">
+    </label>
+    <label>Categoria
+      <input id="categoria" required placeholder="Alimentação">
+    </label>
+    <label>Data
+      <input id="data" type="date">
+    </label>
+    <div class="botoes">
+      <button type="submit" id="salvar" class="principal">Adicionar gasto</button>
+      <button type="button" id="cancelar" hidden>Cancelar</button>
+    </div>
+  </form>
+
+  <p id="erro" role="alert"></p>
+
+  <div class="tabela">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+    <p id="vazio" class="vazio" hidden>Nenhum gasto ainda. Preencha o formulário acima para adicionar o primeiro.</p>
+  </div>
+</main>
+
+<script>
+  // Endereço da API. Sem "http://localhost:8080" na frente: como o próprio Spring
+  // entrega esta página, o navegador já sabe que a API está no mesmo endereço.
+  const API = "/gastos";
+
+  const $ = (id) => document.getElementById(id);
+  const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  let gastos = []; // cópia local da lista que veio do servidor
+
+  // ---------- Comunicação com o backend ----------
+
+  // Faz a requisição e trata os erros. Devolve a resposta, ou null se algo deu errado.
+  async function chamar(url, opcoes) {
+    $("erro").textContent = "";
+    let resposta;
+    try {
+      resposta = await fetch(url, opcoes);
+    } catch (e) {
+      $("erro").textContent = "Não consegui falar com o servidor. A aplicação Spring está rodando?";
+      return null;
+    }
+    if (!resposta.ok) { // status 400, 404, 500...
+      $("erro").textContent = await lerErro(resposta);
+      return null;
+    }
+    return resposta;
+  }
+
+  // Extrai a mensagem de erro que o Spring mandou (as mesmas do @NotBlank, @Positive...).
+  async function lerErro(resposta) {
+    try {
+      const corpo = await resposta.json();
+      if (Array.isArray(corpo.errors) && corpo.errors.length) {
+        return corpo.errors.map((e) => e.defaultMessage).join("; ");
+      }
+      if (corpo.message) return corpo.message;
+    } catch (e) { /* a resposta não veio em JSON */ }
+    return "Erro " + resposta.status;
+  }
+
+  // GET /gastos
+  async function carregar() {
+    const resposta = await chamar(API);
+    if (!resposta) return;
+    gastos = await resposta.json();
+    desenhar();
+  }
+
+  // POST /gastos (novo) ou PUT /gastos/{id} (edição)
+  $("form").addEventListener("submit", async (evento) => {
+    evento.preventDefault(); // impede o navegador de recarregar a página ao enviar
+    const gasto = {
+      descricao: $("descricao").value,
+      valor: Number($("valor").value),
+      categoria: $("categoria").value,
+      data: $("data").value || null, // sem data: o service usa a de hoje
+    };
+    const id = $("id").value;
+    const resposta = await chamar(id ? API + "/" + id : API, {
+      method: id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gasto), // objeto JavaScript -> texto JSON
+    });
+    if (!resposta) return;
+    limparFormulario();
+    carregar();
+  });
+
+  // DELETE /gastos/{id}
+  async function excluir(gasto) {
+    if (!confirm("Excluir " + gasto.descricao + "?")) return;
+    const resposta = await chamar(API + "/" + gasto.id, { method: "DELETE" });
+    if (resposta) carregar();
+  }
+
+  // ---------- Tela ----------
+
+  function desenhar() {
+    const corpo = $("lista");
+    corpo.replaceChildren();
+    let total = 0;
+    for (const g of gastos) {
+      total += g.valor;
+      const linha = corpo.insertRow();
+      linha.insertCell().textContent = formatarData(g.data);
+      linha.insertCell().textContent = g.descricao;
+      linha.insertCell().textContent = g.categoria;
+      const valor = linha.insertCell();
+      valor.className = "num";
+      valor.textContent = moeda.format(g.valor);
+      const acoes = linha.insertCell();
+      acoes.className = "acoes";
+      acoes.append(
+        botao("Editar", "link", () => editar(g)),
+        botao("Excluir", "link perigo", () => excluir(g))
+      );
+    }
+    $("total").textContent = moeda.format(total);
+    $("vazio").hidden = gastos.length > 0;
+  }
+
+  function botao(texto, classe, aoClicar) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = classe;
+    b.textContent = texto;
+    b.addEventListener("click", aoClicar);
+    return b;
+  }
+
+  function editar(g) {
+    $("id").value = g.id;
+    $("descricao").value = g.descricao;
+    $("valor").value = g.valor;
+    $("categoria").value = g.categoria;
+    $("data").value = g.data || "";
+    $("salvar").textContent = "Salvar alterações";
+    $("cancelar").hidden = false;
+    $("descricao").focus();
+  }
+
+  function limparFormulario() {
+    $("form").reset();
+    $("id").value = "";
+    $("salvar").textContent = "Adicionar gasto";
+    $("cancelar").hidden = true;
+  }
+  $("cancelar").addEventListener("click", limparFormulario);
+
+  function formatarData(iso) {
+    if (!iso) return "-";
+    return iso.split("-").reverse().join("/"); // 2026-10-30 vira 30/10/2026
+  }
+
+  carregar(); // ao abrir a página, busca os gastos
+</script>
+</body>
+</html>
