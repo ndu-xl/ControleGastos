@@ -5,248 +5,254 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Controle de gastos</title>
 <style>
-  :root {
-    --papel: #edf1ec; --tinta: #1f2a24; --suave: #5d6b62; --linha: #c9d3cb;
-    --campo: #f8faf7; --destaque: #1e6b4a; --destaque-texto: #ffffff; --perigo: #b3382c;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --papel: #16201b; --tinta: #e6ede8; --suave: #9aaba0; --linha: #31423a;
-      --campo: #1d2923; --destaque: #5fbf93; --destaque-texto: #0e1a14; --perigo: #ee8b7f;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--papel); color: var(--tinta);
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
-
-  header {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    gap: 1rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 2px solid var(--tinta);
-  }
-  h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
-  .total { text-align: right; }
-  .total small { display: block; color: var(--suave); }
-  .total strong {
-    font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1.1;
-    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-  }
-
-  form {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    gap: .75rem; padding: 1.25rem 0; border-bottom: 1px solid var(--linha);
-  }
-  label { display: grid; gap: .25rem; font-size: .875rem; color: var(--suave); }
-  input {
-    font: inherit; color: var(--tinta); background: var(--campo);
-    border: 1px solid var(--linha); border-radius: 4px; padding: .5rem .6rem; min-width: 0;
-  }
-  input:focus-visible, button:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
-  .botoes { display: flex; gap: .5rem; align-items: end; }
-  button {
-    font: inherit; cursor: pointer; border-radius: 4px; padding: .5rem .9rem;
-    border: 1px solid var(--tinta); background: transparent; color: var(--tinta);
-  }
-  button.principal { background: var(--destaque); border-color: var(--destaque); color: var(--destaque-texto); font-weight: 600; }
-  button.perigo { color: var(--perigo); }
-  button.link { border: 0; padding: .25rem .4rem; text-decoration: underline; }
-
-  #erro { min-height: 1.5rem; margin: .75rem 0 0; color: var(--perigo); font-weight: 500; }
-
-  .tabela { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left; font-weight: 500; font-size: .875rem; color: var(--suave);
-    padding: .5rem .5rem .5rem 0; border-bottom: 1px solid var(--tinta);
-  }
-  td { padding: .65rem .5rem .65rem 0; border-bottom: 1px solid var(--linha); }
-  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  td.acoes { white-space: nowrap; text-align: right; padding-right: 0; }
-  .vazio { color: var(--suave); padding: 1.5rem 0; }
+:root{--papel:#edf1ec;--sup:#f8faf7;--tinta:#1f2a24;--suave:#5d6b62;--linha:#c9d3cb;--dest:#1e6b4a;--dest-t:#fff;--perigo:#b3382c}
+:root[data-tema=escuro]{--papel:#141d18;--sup:#1b2620;--tinta:#e6ede8;--suave:#9aaba0;--linha:#2f4037;--dest:#5fbf93;--dest-t:#0e1a14;--perigo:#ee8b7f}
+@media(prefers-color-scheme:dark){:root:not([data-tema=claro]){--papel:#141d18;--sup:#1b2620;--tinta:#e6ede8;--suave:#9aaba0;--linha:#2f4037;--dest:#5fbf93;--dest-t:#0e1a14;--perigo:#ee8b7f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papel);color:var(--tinta);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:64rem;margin:auto;padding:1.5rem 1.25rem 4rem}
+.topo{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding-bottom:1rem;border-bottom:2px solid var(--tinta)}
+h1{margin:0 auto 0 0;font-size:1.1rem}
+button,input,select{font:inherit;color:var(--tinta)}
+button{cursor:pointer;background:transparent;border:1px solid var(--tinta);border-radius:4px;padding:.45rem .85rem}
+button.p{background:var(--dest);border-color:var(--dest);color:var(--dest-t);font-weight:600}
+button.l{border:0;padding:.2rem .4rem;text-decoration:underline}
+button.x{color:var(--perigo)}
+:focus-visible{outline:2px solid var(--dest);outline-offset:2px}
+input,select{background:var(--sup);border:1px solid var(--linha);border-radius:4px;padding:.45rem .6rem;min-width:0}
+.kpis{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--linha)}
+.kpi{padding:1.1rem 1rem 1.1rem 0;min-width:0}.kpi+.kpi{padding-left:1rem;border-left:1px solid var(--linha)}
+.kpi small{display:block;color:var(--suave)}
+.kpi b{font-size:1.4rem;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi.g b{font-size:clamp(2rem,6vw,3rem);line-height:1.1}
+.kpi em{display:block;font-style:normal;color:var(--suave);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.graf{display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding:1.5rem 0;border-bottom:1px solid var(--linha)}
+h2{margin:0 0 .75rem;font-size:.95rem}
+.cat{display:flex;gap:1.25rem;align-items:center}
+svg.rosca{width:9.5rem;flex:none}
+.leg{display:grid;gap:.1rem;flex:1;min-width:0}
+.leg button{display:flex;gap:.5rem;align-items:center;border:0;text-align:left;padding:.2rem .3rem;width:100%}
+.leg button[aria-pressed=true]{background:var(--sup);font-weight:600}
+.leg.s button:not([aria-pressed=true]){opacity:.55}
+.pt{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;flex:none}
+td .pt{margin-right:.4rem}
+.n1{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v1{font-variant-numeric:tabular-nums;color:var(--suave)}
+.meses{display:flex;align-items:flex-end;gap:.6rem;height:9.5rem}
+.mes{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:.25rem;font-size:.75rem;color:var(--suave)}
+.mes i{display:block;width:100%;background:var(--linha);border-radius:3px 3px 0 0;min-height:2px}
+.mes.at i{background:var(--dest)}
+.barra{display:flex;gap:.5rem;flex-wrap:wrap;padding:1rem 0;align-items:center}
+.barra input[type=search]{flex:1;min-width:10rem}
+.barra .c{margin-left:auto;color:var(--suave)}
+.tab{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:0;border-bottom:1px solid var(--tinta);text-align:left;font-weight:500;white-space:nowrap}
+th button{border:0;color:var(--suave);padding:.5rem .5rem .5rem 0;font-size:.85rem}
+th[aria-sort=ascending] button::after{content:" ↑"}th[aria-sort=descending] button::after{content:" ↓"}
+th.n{text-align:right}th.n button{padding-right:0;padding-left:.5rem}
+td{padding:.6rem .5rem .6rem 0;border-bottom:1px solid var(--linha)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0}
+td.a{white-space:nowrap;text-align:right;padding-right:0}
+.vz{color:var(--suave);padding:1.5rem 0}
+dialog{background:var(--papel);color:var(--tinta);border:1px solid var(--tinta);border-radius:6px;padding:1.25rem;width:min(26rem,calc(100% - 2rem))}
+dialog::backdrop{background:#0008}
+dialog form{display:grid;gap:.75rem}
+dialog h2{font-size:1.05rem;margin:0}
+label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
+.fim{display:flex;gap:.5rem;justify-content:flex-end}
+#fe{color:var(--perigo);min-height:1.2rem;margin:0}
+#toasts{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);display:grid;gap:.5rem;z-index:9}
+.t{background:var(--tinta);color:var(--papel);padding:.55rem .9rem;border-radius:4px}
+.t.e{background:var(--perigo)}
+@media(max-width:44rem){.kpis{grid-template-columns:1fr 1fr}.kpi.g{grid-column:1/-1}.kpi:nth-child(2),.kpi:nth-child(4){padding-left:0;border-left:0}.graf{grid-template-columns:1fr}.cat{flex-direction:column;align-items:stretch}svg.rosca{align-self:center}}
 </style>
 </head>
 <body>
 <main>
-  <header>
+  <div class="topo">
     <h1>Controle de gastos</h1>
-    <div class="total">
-      <small>Total gasto</small>
-      <strong id="total">R$ 0,00</strong>
-    </div>
-  </header>
-
-  <form id="form">
-    <input type="hidden" id="id">
-    <label>Descrição
-      <input id="descricao" required placeholder="Almoço">
-    </label>
-    <label>Valor (R$)
-      <input id="valor" type="number" step="0.01" min="0.01" required placeholder="32.50">
-    </label>
-    <label>Categoria
-      <input id="categoria" required placeholder="Alimentação">
-    </label>
-    <label>Data
-      <input id="data" type="date">
-    </label>
-    <div class="botoes">
-      <button type="submit" id="salvar" class="principal">Adicionar gasto</button>
-      <button type="button" id="cancelar" hidden>Cancelar</button>
-    </div>
-  </form>
-
-  <p id="erro" role="alert"></p>
-
-  <div class="tabela">
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th></th>
-        </tr>
-      </thead>
-      <tbody id="lista"></tbody>
-    </table>
-    <p id="vazio" class="vazio" hidden>Nenhum gasto ainda. Preencha o formulário acima para adicionar o primeiro.</p>
+    <button id="tema">Alternar tema</button>
+    <button id="csv">Exportar CSV</button>
+    <button class="p" id="novo">Novo gasto</button>
+  </div>
+  <section class="kpis" id="kpis"></section>
+  <section class="graf">
+    <div><h2>Gastos por categoria</h2><div class="cat" id="cat"></div></div>
+    <div><h2>Últimos 6 meses</h2><div class="meses" id="meses"></div></div>
+  </section>
+  <div class="barra">
+    <input type="search" id="q" placeholder="Buscar descrição ou categoria">
+    <select id="fcat"></select>
+    <input type="month" id="fmes">
+    <button class="l" id="limpar">Limpar filtros</button>
+    <span class="c" id="cont"></span>
+  </div>
+  <div class="tab">
+    <table><thead><tr id="cab"></tr></thead><tbody id="lista"></tbody></table>
+    <p class="vz" id="vz"></p>
   </div>
 </main>
 
+<dialog id="dlg">
+  <form id="f">
+    <h2 id="dt">Novo gasto</h2>
+    <input type="hidden" id="id">
+    <label>Descrição<input id="descricao" required></label>
+    <label>Valor (R$)<input id="valor" type="number" step="0.01" min="0.01" required></label>
+    <label>Categoria<input id="categoria" list="dl" required></label>
+    <datalist id="dl"></datalist>
+    <label>Data<input id="data" type="date"></label>
+    <p id="fe" role="alert"></p>
+    <div class="fim"><button type="button" id="cancelar">Cancelar</button><button class="p" type="submit">Salvar gasto</button></div>
+  </form>
+</dialog>
+<div id="toasts"></div>
+
 <script>
-  // Endereço da API. Sem "http://localhost:8080" na frente: como o próprio Spring
-  // entrega esta página, o navegador já sabe que a API está no mesmo endereço.
-  const API = "/gastos";
+const API = "/gastos", $ = (i) => document.getElementById(i);
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const S = { gastos: [], q: "", cat: "", mes: "", ord: "data", dir: -1, carregado: false };
+const hoje = () => new Date().toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso local
+const fmtData = (d) => (d ? d.split("-").reverse().join("/") : "-");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const soma = (l) => l.reduce((s, g) => s + g.valor, 0);
 
-  const $ = (id) => document.getElementById(id);
-  const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-  let gastos = []; // cópia local da lista que veio do servidor
-
-  // ---------- Comunicação com o backend ----------
-
-  // Faz a requisição e trata os erros. Devolve a resposta, ou null se algo deu errado.
-  async function chamar(url, opcoes) {
-    $("erro").textContent = "";
-    let resposta;
-    try {
-      resposta = await fetch(url, opcoes);
-    } catch (e) {
-      $("erro").textContent = "Não consegui falar com o servidor. A aplicação Spring está rodando?";
-      return null;
-    }
-    if (!resposta.ok) { // status 400, 404, 500...
-      $("erro").textContent = await lerErro(resposta);
-      return null;
-    }
-    return resposta;
+// ---------- Comunicação com o backend (GET, POST, PUT, DELETE em /gastos) ----------
+async function api(url, op) {
+  try {
+    const r = await fetch(url, op);
+    return r.ok ? { r } : { msg: await lerErro(r) };
+  } catch (e) {
+    return { msg: "Sem conexão com o servidor. A aplicação Spring está rodando?" };
   }
+}
+async function lerErro(r) { // usa as mensagens que o Spring devolve (@NotBlank, 404...)
+  try {
+    const c = await r.json();
+    if (c.errors && c.errors.length) return c.errors.map((e) => e.defaultMessage).join("; ");
+    if (c.message) return c.message;
+  } catch (e) {}
+  return "Erro " + r.status;
+}
+async function carregar() {
+  const x = await api(API);
+  if (x.msg) aviso(x.msg, 1); else S.gastos = await x.r.json();
+  S.carregado = true;
+  render();
+}
+async function excluir(g) {
+  if (!confirm("Excluir " + g.descricao + "?")) return;
+  const x = await api(API + "/" + g.id, { method: "DELETE" });
+  x.msg ? aviso(x.msg, 1) : aviso("Gasto excluído");
+  carregar();
+}
+function aviso(txt, erro) {
+  const t = document.createElement("div");
+  t.className = "t" + (erro ? " e" : ""); t.textContent = txt; t.setAttribute("role", "status");
+  $("toasts").append(t); setTimeout(() => t.remove(), 3500);
+}
 
-  // Extrai a mensagem de erro que o Spring mandou (as mesmas do @NotBlank, @Positive...).
-  async function lerErro(resposta) {
-    try {
-      const corpo = await resposta.json();
-      if (Array.isArray(corpo.errors) && corpo.errors.length) {
-        return corpo.errors.map((e) => e.defaultMessage).join("; ");
-      }
-      if (corpo.message) return corpo.message;
-    } catch (e) { /* a resposta não veio em JSON */ }
-    return "Erro " + resposta.status;
-  }
+// ---------- Tela: tudo é recalculado a partir de S.gastos + filtros ----------
+function render() {
+  const cats = [...new Set(S.gastos.map((g) => g.categoria))].sort((a, b) => a.localeCompare(b));
+  const cor = (c) => `hsl(${(cats.indexOf(c) * 57 + 150) % 360} 48% 46%)`;
+  const sel = $("fcat"); sel.innerHTML = ""; sel.add(new Option("Todas as categorias", ""));
+  cats.forEach((c) => sel.add(new Option(c, c)));
+  sel.value = cats.includes(S.cat) ? S.cat : (S.cat = "");
+  $("dl").innerHTML = ""; cats.forEach((c) => $("dl").append(new Option(c)));
 
-  // GET /gastos
-  async function carregar() {
-    const resposta = await chamar(API);
-    if (!resposta) return;
-    gastos = await resposta.json();
-    desenhar();
-  }
+  const q = S.q.trim().toLowerCase();
+  const base = S.gastos.filter((g) => (!S.mes || (g.data || "").startsWith(S.mes)) && (g.descricao + " " + g.categoria).toLowerCase().includes(q));
+  const vis = base.filter((g) => !S.cat || g.categoria === S.cat);
+  const k = S.ord, d = S.dir;
+  vis.sort((a, b) => d * (k === "valor" ? a.valor - b.valor : String(a[k] || "").localeCompare(String(b[k] || ""), "pt-BR")));
 
-  // POST /gastos (novo) ou PUT /gastos/{id} (edição)
-  $("form").addEventListener("submit", async (evento) => {
-    evento.preventDefault(); // impede o navegador de recarregar a página ao enviar
-    const gasto = {
-      descricao: $("descricao").value,
-      valor: Number($("valor").value),
-      categoria: $("categoria").value,
-      data: $("data").value || null, // sem data: o service usa a de hoje
-    };
-    const id = $("id").value;
-    const resposta = await chamar(id ? API + "/" + id : API, {
-      method: id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(gasto), // objeto JavaScript -> texto JSON
-    });
-    if (!resposta) return;
-    limparFormulario();
-    carregar();
-  });
+  // Indicadores
+  const total = soma(vis), mesAt = hoje().slice(0, 7);
+  const maior = vis.reduce((m, g) => (!m || g.valor > m.valor ? g : m), null);
+  $("kpis").innerHTML =
+    `<div class="kpi g"><small>Total gasto</small><b>${brl.format(total)}</b><em>${vis.length} ${vis.length === 1 ? "lançamento" : "lançamentos"}</em></div>` +
+    `<div class="kpi"><small>Este mês</small><b>${brl.format(soma(vis.filter((g) => (g.data || "").startsWith(mesAt))))}</b></div>` +
+    `<div class="kpi"><small>Média por gasto</small><b>${brl.format(vis.length ? total / vis.length : 0)}</b></div>` +
+    `<div class="kpi"><small>Maior gasto</small><b>${brl.format(maior ? maior.valor : 0)}</b><em>${maior ? esc(maior.descricao) : "-"}</em></div>`;
 
-  // DELETE /gastos/{id}
-  async function excluir(gasto) {
-    if (!confirm("Excluir " + gasto.descricao + "?")) return;
-    const resposta = await chamar(API + "/" + gasto.id, { method: "DELETE" });
-    if (resposta) carregar();
-  }
+  // Rosca por categoria (ignora o filtro de categoria, para a legenda poder alternar)
+  const por = {}; base.forEach((g) => (por[g.categoria] = (por[g.categoria] || 0) + g.valor));
+  const bt = soma(base), lista = Object.entries(por).sort((a, b) => b[1] - a[1]);
+  let acc = 0;
+  const segs = lista.map(([c, v]) => {
+    const p = (v / bt) * 100;
+    const s = `<circle r="15.9155" cx="21" cy="21" fill="none" stroke="${cor(c)}" stroke-width="6" stroke-dasharray="${p} ${100 - p}" stroke-dashoffset="${25 - acc}"/>`;
+    acc += p; return s;
+  }).join("");
+  $("cat").innerHTML = lista.length
+    ? `<svg class="rosca" viewBox="0 0 42 42" role="img" aria-label="Gastos por categoria"><circle r="15.9155" cx="21" cy="21" fill="none" stroke="var(--linha)" stroke-width="6"/>${segs}</svg>` +
+      `<div class="leg${S.cat ? " s" : ""}">${lista.map(([c, v]) => `<button data-c="${esc(c)}" aria-pressed="${S.cat === c}" title="${brl.format(v)}"><i class="pt" style="background:${cor(c)}"></i><span class="n1">${esc(c)}</span><span class="v1">${Math.round((v / bt) * 100)}%</span></button>`).join("")}</div>`
+    : `<p class="vz">Sem dados para exibir.</p>`;
 
-  // ---------- Tela ----------
+  // Barras dos últimos 6 meses
+  const meses = [];
+  for (let i = 5; i >= 0; i--) { const dt = new Date(); dt.setDate(1); dt.setMonth(dt.getMonth() - i); meses.push(dt.toLocaleDateString("sv-SE").slice(0, 7)); }
+  const tm = meses.map((m) => soma(vis.filter((g) => (g.data || "").startsWith(m)))), mx = Math.max(...tm, 1);
+  $("meses").innerHTML = meses.map((m, i) => `<div class="mes${m === mesAt ? " at" : ""}" title="${brl.format(tm[i])}"><i style="height:${(tm[i] / mx) * 80}%"></i>${new Date(m + "-02").toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</div>`).join("");
 
-  function desenhar() {
-    const corpo = $("lista");
-    corpo.replaceChildren();
-    let total = 0;
-    for (const g of gastos) {
-      total += g.valor;
-      const linha = corpo.insertRow();
-      linha.insertCell().textContent = formatarData(g.data);
-      linha.insertCell().textContent = g.descricao;
-      linha.insertCell().textContent = g.categoria;
-      const valor = linha.insertCell();
-      valor.className = "num";
-      valor.textContent = moeda.format(g.valor);
-      const acoes = linha.insertCell();
-      acoes.className = "acoes";
-      acoes.append(
-        botao("Editar", "link", () => editar(g)),
-        botao("Excluir", "link perigo", () => excluir(g))
-      );
-    }
-    $("total").textContent = moeda.format(total);
-    $("vazio").hidden = gastos.length > 0;
-  }
+  // Tabela
+  $("cab").innerHTML = [["data", "Data"], ["descricao", "Descrição"], ["categoria", "Categoria"], ["valor", "Valor", "n"]]
+    .map(([c, t, n]) => `<th class="${n || ""}" aria-sort="${S.ord === c ? (S.dir > 0 ? "ascending" : "descending") : "none"}"><button data-o="${c}">${t}</button></th>`).join("") + "<th></th>";
+  $("lista").innerHTML = vis.map((g) => `<tr data-id="${g.id}"><td>${fmtData(g.data)}</td><td>${esc(g.descricao)}</td><td><i class="pt" style="background:${cor(g.categoria)}"></i>${esc(g.categoria)}</td><td class="n">${brl.format(g.valor)}</td><td class="a"><button class="l" data-a="e">Editar</button><button class="l x" data-a="x">Excluir</button></td></tr>`).join("");
+  $("vz").hidden = !!vis.length;
+  $("vz").textContent = !S.carregado ? "Carregando…" : S.gastos.length ? "Nenhum gasto corresponde aos filtros." : "Nenhum gasto ainda. Clique em Novo gasto para adicionar o primeiro.";
+  $("cont").textContent = vis.length + " de " + S.gastos.length;
+}
 
-  function botao(texto, classe, aoClicar) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = classe;
-    b.textContent = texto;
-    b.addEventListener("click", aoClicar);
-    return b;
-  }
+// ---------- Interações ----------
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.c !== undefined) { S.cat = S.cat === b.dataset.c ? "" : b.dataset.c; render(); }
+  else if (b.dataset.o) { S.dir = S.ord === b.dataset.o ? -S.dir : (b.dataset.o === "valor" || b.dataset.o === "data" ? -1 : 1); S.ord = b.dataset.o; render(); }
+  else if (b.dataset.a) { const g = S.gastos.find((x) => x.id == b.closest("tr").dataset.id); b.dataset.a === "e" ? abrir(g) : excluir(g); }
+});
+$("q").oninput = (e) => { S.q = e.target.value; render(); };
+$("fcat").onchange = (e) => { S.cat = e.target.value; render(); };
+$("fmes").onchange = (e) => { S.mes = e.target.value; render(); };
+$("limpar").onclick = () => { S.q = S.cat = S.mes = ""; $("q").value = $("fmes").value = ""; render(); };
 
-  function editar(g) {
-    $("id").value = g.id;
-    $("descricao").value = g.descricao;
-    $("valor").value = g.valor;
-    $("categoria").value = g.categoria;
-    $("data").value = g.data || "";
-    $("salvar").textContent = "Salvar alterações";
-    $("cancelar").hidden = false;
-    $("descricao").focus();
-  }
+const dlg = $("dlg"), f = $("f");
+function abrir(g) {
+  f.reset(); $("fe").textContent = ""; $("id").value = g ? g.id : "";
+  $("dt").textContent = g ? "Editar gasto" : "Novo gasto";
+  if (g) { $("descricao").value = g.descricao; $("valor").value = g.valor; $("categoria").value = g.categoria; }
+  $("data").value = g && g.data ? g.data : hoje();
+  dlg.showModal(); $("descricao").focus();
+}
+$("novo").onclick = () => abrir();
+$("cancelar").onclick = () => dlg.close();
+f.onsubmit = async (e) => {
+  e.preventDefault(); // não deixa o navegador recarregar a página
+  const id = $("id").value;
+  const gasto = { descricao: $("descricao").value, valor: Number($("valor").value), categoria: $("categoria").value, data: $("data").value || null };
+  const x = await api(id ? API + "/" + id : API, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gasto) });
+  if (x.msg) { $("fe").textContent = x.msg; return; }
+  dlg.close(); aviso(id ? "Gasto atualizado" : "Gasto adicionado"); carregar();
+};
 
-  function limparFormulario() {
-    $("form").reset();
-    $("id").value = "";
-    $("salvar").textContent = "Adicionar gasto";
-    $("cancelar").hidden = true;
-  }
-  $("cancelar").addEventListener("click", limparFormulario);
+$("csv").onclick = () => {
+  const l = [["Data", "Descrição", "Categoria", "Valor"], ...S.gastos.map((g) => [g.data || "", g.descricao, g.categoria, String(g.valor).replace(".", ",")])];
+  const txt = "\uFEFF" + l.map((r) => r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([txt], { type: "text/csv;charset=utf-8" })); a.download = "gastos.csv"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
 
-  function formatarData(iso) {
-    if (!iso) return "-";
-    return iso.split("-").reverse().join("/"); // 2026-10-30 vira 30/10/2026
-  }
+$("tema").onclick = () => {
+  const r = document.documentElement, escuro = matchMedia("(prefers-color-scheme:dark)").matches;
+  const novo = (r.dataset.tema || (escuro ? "escuro" : "claro")) === "escuro" ? "claro" : "escuro";
+  r.dataset.tema = novo; try { localStorage.setItem("tema", novo); } catch (e) {}
+};
+try { const t = localStorage.getItem("tema"); if (t) document.documentElement.dataset.tema = t; } catch (e) {}
 
-  carregar(); // ao abrir a página, busca os gastos
+render(); carregar();
 </script>
 </body>
 </html>
