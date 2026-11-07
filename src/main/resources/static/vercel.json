@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/gastos", "destination": "https://controlegastos-t8rw.onrender.com/gastos/gastos" },
-    { "source": "/gastos/:id", "destination": "https://controlegastos-t8rw.onrender.com/gastos/gastos/:id" }
+    { "source": "/gastos", "destination": "https://controlegastos-t8rw.onrender.com/gastos" },
+    { "source": "/gastos/:id", "destination": "https://controlegastos-t8rw.onrender.com/gastos/:id" }
   ]
 }
