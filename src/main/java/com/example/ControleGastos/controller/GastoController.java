@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/gastos")
@@ -19,28 +20,30 @@ public class GastoController {
     }
 
     @GetMapping
-    public List<Gasto> listar() {
-        return service.listar();
+    public List<Gasto> listar(@RequestHeader("X-Visitante")UUID visitante) {
+        return service.listar(visitante.toString());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Gasto criar(@Valid @RequestBody Gasto gasto) {
-        return service.criar(gasto);
+    public Gasto criar(@Valid @RequestBody Gasto gasto, @RequestHeader("X-Visitante")UUID visitante) {
+        return service.criar(gasto, visitante.toString());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletar(@PathVariable Long id) {
-        service.deletar(id);
+    public void deletar(@PathVariable Long id, @RequestHeader("X-Visitante")UUID visitante) {
+        service.deletar(id, visitante.toString());
     }
+
     @GetMapping("/{id}")
-    public Gasto buscarPorId(@PathVariable Long id) {
-        return service.buscarPorId(id);
+    public Gasto buscarPorId(@PathVariable Long id, @RequestHeader("X-Visitante")UUID visitante) {
+        return service.buscarPorId(id, visitante.toString());
     }
+
     @PutMapping("/{id}")
-    public Gasto atualizar(@PathVariable Long id, @Valid @RequestBody Gasto gasto) {
-        return service.atualizar(id, gasto);
+    public Gasto atualizar(@PathVariable Long id, @Valid @RequestBody Gasto gasto, @RequestHeader("X-Visitante")UUID visitante) {
+        return service.atualizar(id, gasto, visitante.toString());
     }
 
 }

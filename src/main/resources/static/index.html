@@ -66,6 +66,7 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
 .t{background:var(--tinta);color:var(--papel);padding:.55rem .9rem;border-radius:4px}
 .t.e{background:var(--perigo)}
 @media(max-width:44rem){.kpis{grid-template-columns:1fr 1fr}.kpi.g{grid-column:1/-1}.kpi:nth-child(2),.kpi:nth-child(4){padding-left:0;border-left:0}.graf{grid-template-columns:1fr}.cat{flex-direction:column;align-items:stretch}svg.rosca{align-self:center}}
+.aviso { color: var(--suave); font-size: .85rem; margin: .75rem 0 0; }
 </style>
 </head>
 <body>
@@ -81,6 +82,8 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
     <div><h2>Gastos por categoria</h2><div class="cat" id="cat"></div></div>
     <div><h2>Últimos 6 meses</h2><div class="meses" id="meses"></div></div>
   </section>
+
+  <p class="aviso">Modo demonstração: seus gastos ficam visíveis só neste navegador. Não digite dados reais.</p>
   <div class="barra">
     <input type="search" id="q" placeholder="Buscar descrição ou categoria">
     <select id="fcat"></select>
@@ -110,7 +113,18 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
 <div id="toasts"></div>
 
 <script>
-const API = "/gastos", $ = (i) => document.getElementById(i);
+function obterVisitante() {
+  try {
+    let v = localStorage.getItem("visitante");
+    if (!v) { v = crypto.randomUUID(); localStorage.setItem("visitante", v); }
+    return v;
+  } catch (e) {
+    return crypto.randomUUID(); // sem localStorage, vale só até recarregar a página
+  }
+}
+const VISITANTE = obterVisitante();
+const API = "/gastos", $ = (i) => op = { ...op, headers: { ...(op && op.headers), "X-Visitante": VISITANTE } };
+document.getElementById(i);
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const S = { gastos: [], q: "", cat: "", mes: "", ord: "data", dir: -1, carregado: false };
 const hoje = () => new Date().toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso local

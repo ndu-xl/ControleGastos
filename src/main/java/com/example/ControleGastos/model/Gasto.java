@@ -1,12 +1,11 @@
 package com.example.ControleGastos.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
@@ -15,17 +14,32 @@ public class Gasto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Size(max = 100, message = "A descrição tem que ter no máximo 100 caracteres")
     @NotBlank(message = "A descrição é obrigatória")
     private String descricao;
 
     @Positive(message = "O valor deve ser maior que zero")
     private double valor;
 
+    @Size(max = 50, message = "A categoria tem que ter no máximo 50 caracteres")
     @NotBlank(message = "A categoria é obrigatória")
     private String categoria;
 
     @PastOrPresent(message = "A data não pode ser futura")
     private LocalDate data;
+
+    @JsonIgnore
+    @Column(length = 36)
+    private String visitante;
+
+    public String getVisitante() {
+        return visitante;
+    }
+
+    public void setVisitante(String visitante) {
+        this.visitante = visitante;
+    }
 
     public Long getId() {
         return id;
