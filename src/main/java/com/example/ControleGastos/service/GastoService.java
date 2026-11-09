@@ -16,7 +16,7 @@ public class GastoService {
     private static final double VALOR_MAXIMO = 1_000_000;
 
     private void validarRegras(Gasto gasto) {
-        if (gasto.getId() > VALOR_MAXIMO) {
+        if (gasto.getValor() > VALOR_MAXIMO) {
             throw new RegraDeNegocio("O valor máximo é R$1.000.000,00");
         }
     }
@@ -31,13 +31,14 @@ public class GastoService {
 
     public Gasto criar(Gasto gasto, String visitante) {
         validarRegras(gasto);
-        if (repository.countByVisitante(visitante) > LIMITE_POR_VISITANTE) {
+        if (repository.countByVisitante(visitante) >= LIMITE_POR_VISITANTE) {
             throw new RegraDeNegocio("Limite de "+LIMITE_POR_VISITANTE+" gastos na demonstração. Exclua algum para adicionar outro.");
         }
         if (gasto.getData() == null) {
             gasto.setData(LocalDate.now());
         }
         gasto.setId(null);
+        gasto.setVisitante(visitante);
         return repository.save(gasto);
     }
 
