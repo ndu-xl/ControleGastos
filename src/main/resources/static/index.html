@@ -113,15 +113,6 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
 <div id="toasts"></div>
 
 <script>
-async function api(url, op) {
-  op = { ...op, headers: { ...(op && op.headers), "X-Visitante": VISITANTE } };
-  try {
-    const r = await fetch(url, op);
-    return r.ok ? { r } : { msg: await lerErro(r) };
-  } catch (e) {
-    return { msg: "Sem conexão com o servidor. A aplicação Spring está rodando?" };
-  }
-}
 function obterVisitante() {
   try {
     let v = localStorage.getItem("visitante");
@@ -142,6 +133,7 @@ const soma = (l) => l.reduce((s, g) => s + g.valor, 0);
 
 // ---------- Comunicação com o backend (GET, POST, PUT, DELETE em /gastos) ----------
 async function api(url, op) {
+  op = { ...op, headers: { ...(op && op.headers), "X-Visitante": VISITANTE } };
   try {
     const r = await fetch(url, op);
     return r.ok ? { r } : { msg: await lerErro(r) };
