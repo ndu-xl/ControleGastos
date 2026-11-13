@@ -72,6 +72,16 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
 .t.e{background:var(--perigo)}
 @media(max-width:44rem){.kpis{grid-template-columns:1fr 1fr}.kpi.g{grid-column:1/-1}.kpi:nth-child(2),.kpi:nth-child(4){padding-left:0;border-left:0}.graf{grid-template-columns:1fr}.cat{flex-direction:column;align-items:stretch}svg.rosca{align-self:center}}
 .aviso { color: var(--suave); font-size: .85rem; margin: .75rem 0 0; }
+#progresso{position:fixed;top:0;left:0;right:0;height:3px;z-index:20;background:linear-gradient(90deg,transparent,var(--dest),transparent) no-repeat;background-size:40% 100%;animation:corre 1.1s linear infinite}
+@keyframes corre{from{background-position:-40% 0}to{background-position:140% 0}}
+@keyframes gira{to{transform:rotate(360deg)}}
+.giro,[aria-busy=true]::before{display:inline-block;width:1em;height:1em;flex:none;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:gira .7s linear infinite}
+[aria-busy=true]::before{content:"";width:.8em;height:.8em;margin-right:.5em;vertical-align:-.1em}
+.espera{display:flex;align-items:center;gap:.75rem;margin:1rem 0 0;padding:.75rem 1rem;border:1px solid var(--linha);border-radius:4px;background:var(--sup)}
+.espera[hidden]{display:none}
+tr.apagando{opacity:.5}
+button:disabled,input:disabled{cursor:not-allowed;opacity:.6}
+@media(prefers-reduced-motion:reduce){#progresso{animation:none;background:var(--dest)}.giro,[aria-busy=true]::before{animation-duration:2.5s}}
 </style>
 </head>
 <body>
@@ -82,6 +92,8 @@ label{display:grid;gap:.2rem;font-size:.85rem;color:var(--suave)}
     <button id="csv">Exportar CSV</button>
     <button class="p" id="novo">Novo gasto</button>
   </div>
+  <div class="espera" id="espera" role="status" hidden><span class="giro" aria-hidden="true"></span><span id="espera-txt"></span></div>
+  <div id="progresso" hidden></div>
   <section class="kpis" id="kpis"></section>
   <section class="graf">
     <div><h2>Gastos por categoria</h2><div class="cat" id="cat"></div></div>
@@ -131,6 +143,8 @@ const VISITANTE = obterVisitante();
 const API = "/gastos", $ = (i) => document.getElementById(i);
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const S = { gastos: [], q: "", cat: "", mes: "", ord: "data", dir: -1, carregado: false };
+let salvando = false, pendentes = 0;
+const excluindo = new Set(); // ids com exclusão em andamento
 const hoje = () => new Date().toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso local
 const fmtData = (d) => (d ? d.split("-").reverse().join("/") : "-");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -155,16 +169,40 @@ async function lerErro(r) { // usa as mensagens que o Spring devolve (@NotBlank,
   return "Erro " + r.status;
 }
 async function carregar() {
-  const x = await api(API);
+  const primeira = !S.carregado;
+  if (primeira) { $("novo").disabled = true; mostrarEspera("O Render está carregando, pode demorar até 50 segundos…"); }
+  const x = await comProgresso(() => api(API));
   if (x.msg) aviso(x.msg, 1); else S.gastos = await x.r.json();
   S.carregado = true;
+  if (primeira) { esconderEspera(); $("novo").disabled = false; }
   render();
 }
 async function excluir(g) {
+  if (excluindo.has(g.id)) return; // já está excluindo: ignora o clique repetido
   if (!confirm("Excluir " + g.descricao + "?")) return;
-  const x = await api(API + "/" + g.id, { method: "DELETE" });
+  excluindo.add(g.id); render();
+  const x = await comProgresso(() => api(API + "/" + g.id, { method: "DELETE" }), 5000);
+  excluindo.delete(g.id);
   x.msg ? aviso(x.msg, 1) : aviso("Gasto excluído");
   carregar();
+}
+// Barra no topo enquanto houver requisição em andamento; após "dicaApos" ms avisa que pode demorar
+async function comProgresso(fn, dicaApos) {
+  pendentes++; $("progresso").hidden = false;
+  const dica = dicaApos ? setTimeout(() => aviso("O Render está carregando, pode demorar até 50 segundos…"), dicaApos) : 0;
+  try { return await fn(); }
+  finally { clearTimeout(dica); if (--pendentes <= 0) $("progresso").hidden = true; }
+}
+function mostrarEspera(t) { $("espera-txt").textContent = t; $("espera").hidden = false; }
+function esconderEspera() { $("espera").hidden = true; }
+function travar(on) { // trava o formulário enquanto salva
+  salvando = on;
+  f.querySelectorAll("input").forEach((i) => (i.disabled = on));
+  $("cancelar").disabled = on;
+  const b = f.querySelector("button[type=submit]");
+  b.disabled = on; b.textContent = on ? "Salvando…" : "Salvar gasto";
+  if (on) b.setAttribute("aria-busy", "true"); else b.removeAttribute("aria-busy");
+  $("fe").textContent = "";
 }
 function aviso(txt, erro) {
   const t = document.createElement("div");
@@ -229,7 +267,7 @@ function render() {
   // Tabela
   $("cab").innerHTML = [["data", "Data"], ["descricao", "Descrição"], ["categoria", "Categoria"], ["valor", "Valor", "n"]]
     .map(([c, t, n]) => `<th class="${n || ""}" aria-sort="${S.ord === c ? (S.dir > 0 ? "ascending" : "descending") : "none"}"><button data-o="${c}">${t}</button></th>`).join("") + "<th></th>";
-  $("lista").innerHTML = vis.map((g) => `<tr data-id="${g.id}"><td>${fmtData(g.data)}</td><td>${esc(g.descricao)}</td><td><i class="pt" style="background:${cor(g.categoria)}"></i>${esc(g.categoria)}</td><td class="n">${brl.format(g.valor)}</td><td class="a"><button class="l" data-a="e">Editar</button><button class="l x" data-a="x">Excluir</button></td></tr>`).join("");
+  $("lista").innerHTML = vis.map((g) => { const ap = excluindo.has(g.id); return `<tr data-id="${g.id}"${ap ? ' class="apagando"' : ""}><td>${fmtData(g.data)}</td><td>${esc(g.descricao)}</td><td><i class="pt" style="background:${cor(g.categoria)}"></i>${esc(g.categoria)}</td><td class="n">${brl.format(g.valor)}</td><td class="a">${ap ? '<button class="l x" disabled aria-busy="true">Excluindo…</button>' : '<button class="l" data-a="e">Editar</button><button class="l x" data-a="x">Excluir</button>'}</td></tr>`; }).join("");
   $("vz").hidden = !!vis.length;
   $("vz").textContent = !S.carregado ? "Carregando…" : S.gastos.length ? "Nenhum gasto corresponde aos filtros." : "Nenhum gasto ainda. Clique em Novo gasto para adicionar o primeiro.";
   $("cont").textContent = vis.length + " de " + S.gastos.length;
@@ -260,12 +298,16 @@ $("novo").onclick = () => abrir();
 $("cancelar").onclick = () => dlg.close();
 f.onsubmit = async (e) => {
   e.preventDefault(); // não deixa o navegador recarregar a página
+  if (salvando) return; // ignora segundo clique ou Enter enquanto espera a resposta
   const id = $("id").value;
   const gasto = { descricao: $("descricao").value, valor: Number($("valor").value), categoria: $("categoria").value, data: $("data").value || null };
-  const x = await api(id ? API + "/" + id : API, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gasto) });
+  travar(true);
+  const x = await comProgresso(() => api(id ? API + "/" + id : API, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gasto) }), 5000);
+  travar(false);
   if (x.msg) { $("fe").textContent = x.msg; return; }
   dlg.close(); aviso(id ? "Gasto atualizado" : "Gasto adicionado"); carregar();
 };
+dlg.addEventListener("cancel", (e) => { if (salvando) e.preventDefault(); }); // Esc não fecha enquanto salva
 
 $("csv").onclick = () => {
   const l = [["Data", "Descrição", "Categoria", "Valor"], ...S.gastos.map((g) => [g.data || "", g.descricao, g.categoria, String(g.valor).replace(".", ",")])];
